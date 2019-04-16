@@ -1,0 +1,59 @@
+model DietGen	! Name the model
+
+uses "mmxprs"	! include the Xpress solver package
+uses "mmodbc"	! include package to read from Excel
+
+
+NumFoods := 7146	! declare how many foods we have
+NumNutrients := 30	! declare how many nutrients we're tracking consumption of
+
+declarations	! declare sets and arrays
+
+	Foods = 1..NumFoods+1 				! We need an extra "dummy" food as we'll see later
+	Nutrients = 1..NumNutrients
+	
+	FoodNames: array(Foods) of string		! names of each food
+	NutNames: array(Nutrients) of string	! names of each nutrient
+		
+	Chol: array(Foods) of real				! vector of cholesterol for each food
+	Calorie: array(Foods) of real				! vector of calorie for each food
+	Contents: array(Foods,Nutrients) of real	! matrix of food content
+	Minimums: array(Nutrients) of real			! minimum intake of each nutrient
+	Maximums: array(Nutrients) of real	 		! maximum intake of each nutrient
+		
+	Eaten: dynamic array(Foods) of mpvar	! variables: amount of each food eaten
+											! "dynamic" means we'll be generating variables
+											! instead of defining them all up front
+
+	minShadowPrices: array(Nutrients) of real		! array to hold the shadow prices of the minimum-intake constraints
+	maxShadowPrices: array(Nutrients) of real		! array to hold the shadown prices of the maximum-intake constraints
+	
+	EatNut: array(Nutrients) of real
+									
+	ColsGen: integer			! number of columns generated in the problem so far
+	BestReducedCost: real		! what is the best reduced cost
+	BestFood: integer			! which food has the best reduced cost
+	TotalCalorie: real			! total calorie
+	
+end-declarations	! end declarations section
+
+
+initializations from "mmodbc.odbc:diet.xls"	! read from Excel file
+
+ FoodNames as "[a2:a7148]"	! NOTE: In the Excel file, the food names
+ 							! are in cells a3:a7148, not a2:a7148.
+ 							! For some reason, Xpress makes you always
+							! include one row of cells above the data you
+							! want to read.  
+							!	You'll see the same extra row in all of 
+							! these other things read from Excel.
+ NutNames as "[b1:ae2]"	 						
+ Chol as "[ac2:ac7148]"
+ Calorie as "[d2:d7148]"
+ Contents as "[b2:ae7148]" 
+ Minimums as "[b7149:ae7150]"
+ Maximums as "[b7151:ae7152]"
+ 
+end-initializations
+
+end-model
